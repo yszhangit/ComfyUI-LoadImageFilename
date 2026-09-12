@@ -1,0 +1,14 @@
+[project]
+name = "ComfyUI-LoadImageFilename"
+description = "ComfyUI's built-in Load Image node plus a third output: the loaded file's name without its extension."
+version = "1.0.0"
+license = { file = "LICENSE" }
+requires-python = ">=3.9"
+
+[project.urls]
+Repository = "https://github.com/yszhangit/ComfyUI-LoadImageFilename"
+# Used by Comfy Registry https://registry.comfy.org
+
+[tool.comfy]
+PublisherId = "yszhangit"
+DisplayName = "ComfyUI-LoadImageFilename"
