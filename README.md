@@ -8,6 +8,17 @@ name without its extension (`photo.png` -> `photo`). The node subclasses
 animated image support, `IS_CHANGED` and `VALIDATE_INPUTS` all come from core.
 There is no PIL, torch or numpy code here.
 
+## Installation
+
+Install through ComfyUI Manager, or clone into `custom_nodes`:
+
+```bash
+cd ComfyUI/custom_nodes
+git clone https://github.com/yszhangit/ComfyUI-LoadImageFilename
+```
+
+No dependencies. Restart ComfyUI afterwards.
+
 ## Outputs
 
 | Name | Type | Description |
