@@ -16,18 +16,27 @@ There is no PIL, torch or numpy code here.
 | `mask` | MASK | The image mask, same as the built-in node. |
 | `filename` | STRING | File name without extension. |
 
-## Feeding Save Image
+## Feeding Save Image Typical use case
+includes the input filename into the output filename.
 
 1. Add the node and pick an image.
-2. On `Save Image`, right-click the `filename_prefix` widget and choose
-   **Convert Widget to Input**.
-3. Link `filename` into it.
+2. Connect the `filename_prefix` to `Concatenate Text`, add your prefix or postfix.
+3. Link `Concatenate Text` into `Save Image` filename.
 
-ComfyUI still appends its own counter and extension, so `photo` becomes
-`photo_00001_.png`.
+![Sample workflow: the filename output feeding the Save Image filename_prefix](load-image-filename-workflow-sample.png)
 
-## After changing this node
+In the sample above the prefix `qwen_edit/qie_` is joined with the `filename`
+output of `slot_01_00002_.png`, so `Save Image` writes into
+`output/qwen_edit/qie_slot_01_00002_...png`.
 
-Custom nodes are imported once at startup, so the server must be restarted. The
-browser tab caches the node list separately, so hard-refresh it
-(Ctrl+Shift+R) as well.
+## Inspired by
+
+[thalismind/ComfyUI-LoadImageWithFilename](https://github.com/thalismind/ComfyUI-LoadImageWithFilename),
+which outputs the file name alongside folder loading and a file-name driven
+`Save Image`. This pack is an independent minimal implementation: it subclasses
+ComfyUI's own `LoadImage` rather than copying the decode and save code.
+
+## License
+
+GPL-3.0, matching ComfyUI itself. See [LICENSE](LICENSE).
+

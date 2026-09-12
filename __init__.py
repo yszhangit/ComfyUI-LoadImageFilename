@@ -1,11 +1,11 @@
-from .nodes import LoadImageWithFilename
+from .nodes import LoadImageFilename
 
 NODE_CLASS_MAPPINGS = {
-    "LoadImageWithFilename": LoadImageWithFilename,
+    "LoadImageFilename": LoadImageFilename,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "LoadImageWithFilename": "Load Image (Filename)",
+    "LoadImageFilename": "Load Image (Filename)",
 }
 
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]

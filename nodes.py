@@ -4,7 +4,7 @@ import folder_paths
 from nodes import LoadImage
 
 
-class LoadImageWithFilename(LoadImage):
+class LoadImageFilename(LoadImage):
     RETURN_TYPES = ("IMAGE", "MASK", "STRING")
     RETURN_NAMES = ("image", "mask", "filename")
     CATEGORY = "image"
