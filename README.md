@@ -6,7 +6,8 @@ It is ComfyUI's built-in `Load Image` node plus a third output: the loaded file'
 name without its extension (`photo.png` -> `photo`). The node subclasses
 `nodes.LoadImage`, so the dropdown, upload button, image decoding, video and
 animated image support, `IS_CHANGED` and `VALIDATE_INPUTS` all come from core.
-There is no PIL, torch or numpy code here.
+The regex preview card is drawn with Pillow (`PIL`); the node pulls in no other
+dependencies.
 
 ## Installation
 
@@ -84,6 +85,34 @@ Every time the node runs it draws a preview card in its preview panel: **SOURCE*
 with the matched region highlighted, the **PATTERN**, the **MATCHED** text, and
 the **RESULT** — so you watch each filename transform as you load images. No
 extra nodes, dependencies, or frontend code.
+
+## Common patterns
+
+Python `re` syntax. The result below is the regex step; the `sanitize_filename`
+toggle then strips control/path/reserved characters (so a replacement can't
+inject a `/`), and `filter_emoji` (if on) removes emoji.
+
+| Source name | `pattern` | `replacement` | Result |
+| --- | --- | --- | --- |
+| `ComfyUI_00001_` | `_+\d+_*` | *(empty)* | `ComfyUI` |
+| `slot_001` | `_+\d+_*` | *(empty)* | `slot` |
+| `DSC_0420` | `_?\d+$` | *(empty)* | `DSC` |
+| `001_photo` | `^\d+_?` | *(empty)* | `photo` |
+| `2024-01-15_photo` | `^\d{4}-\d{2}-\d{2}_?` | *(empty)* | `photo` |
+| `slot_001_v2` | `_.*$` | *(empty)* | `slot` |
+| `a_b_c` | `^.*_` | *(empty)* | `c` |
+| `photo copy 2` | ` copy \d+$` | *(empty)* | `photo` |
+| `my cool pic` | `\s+` | `_` | `my_cool_pic` |
+| `a___b` | `_{2,}` | `_` | `a_b` |
+| `img00042png` | `[^0-9]+` | *(empty)* | `00042` |
+| `verylongfilename123456` | `^(.{12}).*$` | `\1` | `verylongfile` |
+| *(any name)* | `^.*$` | `myname` | `myname` |
+
+- **Strip a counter** — `_+\d+_*` (trailing), `^\d+_?` (leading). The `$`/`^`
+  anchors keep it from eating a middle `_1_`.
+- **Rename fully** — `^.*$` + the new name in `replacement`.
+- **Keep first N chars** — `^(.{N}).*$` with `replacement = \1`.
+- **Groups** — `replacement` supports `\1`, `\2`, … referencing capture groups.
 
 ## Test workflow
 
