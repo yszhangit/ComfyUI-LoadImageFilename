@@ -11,11 +11,17 @@ from nodes import LoadImage
 # Leading/trailing dots and spaces are stripped so the value is a bare, safe
 # component for Save Image's filename_prefix.
 _RESERVED_CHARS = '\\/:*?"<>|'
+_RESERVED_NO_SLASH = '\\:*?"<>|'
 _CONTROL_CATEGORIES = frozenset(("Cc", "Cf", "Co", "Cs"))
 
 
-def _sanitize_filename(name):
+def _sanitize_filename(name, allow_path_separator=False):
     name = "".join(c for c in name if unicodedata.category(c) not in _CONTROL_CATEGORIES)
+    if allow_path_separator:
+        # Keep '/' for subfolders, strip the other reserved characters, and drop
+        # '.'/'..' segments and leading slashes so a replacement cannot traverse.
+        name = "".join(c for c in name if c not in _RESERVED_NO_SLASH)
+        return "/".join(p for p in (s.strip().strip(".").strip() for s in name.split("/")) if p)
     name = "".join(c for c in name if c not in _RESERVED_CHARS)
     return name.strip().strip(".").strip().strip(".")
 
@@ -101,7 +107,9 @@ class LoadImageFilename(LoadImage):
         "'filter emoji' (off by default) additionally removes emoji and "
         "emoji joiners. 'pattern'/'replacement' run re.sub on the name first "
         "(full rename is pattern '^.*$'); sanitize runs last, so a replacement "
-        "cannot inject a path separator."
+        "cannot inject a path separator. 'allow_path_separator' keeps '/' for "
+        "Save Image subfolders while still stripping the other reserved "
+        "characters and any '..' traversal."
     )
     SEARCH_ALIASES = ["load image filename", "image filename", "image name", "sanitize filename"]
 
@@ -113,19 +121,20 @@ class LoadImageFilename(LoadImage):
         optional["filter_emoji"] = ("BOOLEAN", {"default": False})
         optional["pattern"] = ("STRING", {"default": "", "multiline": True})
         optional["replacement"] = ("STRING", {"default": ""})
+        optional["allow_path_separator"] = ("BOOLEAN", {"default": False})
         return inputs
 
-    def load_image(self, image, sanitize_filename=True, filter_emoji=False, pattern="", replacement=""):
+    def load_image(self, image, sanitize_filename=True, filter_emoji=False, pattern="", replacement="", allow_path_separator=False):
         images, mask = super().load_image(image)
         source = os.path.splitext(os.path.basename(folder_paths.get_annotated_filepath(image)))[0]
         filename, matches = _apply_regex(source, pattern, replacement)
         if filter_emoji:
             filename = _filter_emoji(filename)
         if sanitize_filename:
-            filename = _sanitize_filename(filename)
+            filename = _sanitize_filename(filename, allow_path_separator)
         preview = _preview_text_block(source, pattern, matches, filename)
         return {"ui": {"text": (preview,)}, "result": (images, mask, filename, preview)}
 
     @classmethod
-    def IS_CHANGED(s, image, sanitize_filename=True, filter_emoji=False, pattern="", replacement=""):
-        return super().IS_CHANGED(image) + str(sanitize_filename) + str(filter_emoji) + repr((pattern, replacement))
+    def IS_CHANGED(s, image, sanitize_filename=True, filter_emoji=False, pattern="", replacement="", allow_path_separator=False):
+        return super().IS_CHANGED(image) + str(sanitize_filename) + str(filter_emoji) + repr((pattern, replacement)) + str(allow_path_separator)

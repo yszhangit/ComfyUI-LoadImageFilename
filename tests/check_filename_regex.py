@@ -104,4 +104,25 @@ try:
 finally:
     _rm(bad)
 
+# allow_path_separator: keep '/', strip other reserved chars, block traversal.
+sf = m._sanitize_filename
+assert sf("a/b", False) == "ab"
+assert sf("a/b", True) == "a/b"
+assert sf("a\\b/c", True) == "ab/c"
+assert sf("../../etc/passwd", True) == "etc/passwd"
+assert sf("/etc/passwd", True) == "etc/passwd"
+assert sf("a/./b/..", True) == "a/b"
+assert sf(" qwen_edit/ qie. ", True) == "qwen_edit/qie"
+
+photo = _make("photo.png")
+try:
+    out = Cls().load_image("photo.png", sanitize_filename=True, allow_path_separator=True,
+                           pattern=r"^", replacement="qwen_edit/")
+    assert _name(out) == "qwen_edit/photo", _name(out)
+    out = Cls().load_image("photo.png", sanitize_filename=True, allow_path_separator=True,
+                           pattern=r"^", replacement="../../")
+    assert ".." not in _name(out) and not _name(out).startswith("/"), _name(out)
+finally:
+    _rm("photo.png")
+
 print("ALL OK")

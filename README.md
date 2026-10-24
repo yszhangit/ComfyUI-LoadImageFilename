@@ -39,7 +39,7 @@ Use the input file's name as part of the output file's name.
 
 ## Toggles
 
-Two independent boolean inputs control the `filename` output. Each is part of
+Three independent boolean inputs control the `filename` output. Each is part of
 `IS_CHANGED`, so flipping a toggle re-runs the node and refreshes the output.
 
 ### `sanitize_filename` (on by default)
@@ -62,6 +62,16 @@ regional indicators, variation selectors, the zero-width joiner, combining
 keycap, and common symbol singles (`© ® ™ ✅ ❌ ⭐` …). Independent of sanitize —
 enable it on top of sanitize to drop emoji too, or alone to strip emoji while
 leaving control and reserved characters untouched.
+
+### `allow_path_separator` (off by default)
+
+Only applies when `sanitize_filename` is on. Keeps `/` so a regex `replacement`
+can build a **subfolder** for `Save Image` — `Save Image` reads `/` as a subfolder
+on Windows and Linux alike (use `/`, not `\`). Everything else is still stripped:
+`\ : * ? " < > |`, control characters, and any `.` / `..` / leading-slash segment,
+so a name cannot traverse outside `output/` (ComfyUI's own output-containment
+check is a final backstop). Windows reserved names like `CON` are moot —
+`Save Image` appends `_00001_`, making `CON_00001_.png`.
 
 ## Regex manipulation
 
@@ -97,12 +107,13 @@ classic litegraph UI. The node shows `ui.text` on the Vue / node2 frontend.
 inside `output/`), so a directory is a common thing to add. Build `qwen_edit/photo`:
 
 - `pattern = ^`, `replacement = qwen_edit/`
-- **turn `sanitize_filename` OFF** — sanitize strips `/` (it counts as a path
-  separator), so the slash survives only with sanitize off.
+- `allow_path_separator` **ON** (with `sanitize_filename` on)
 
-With sanitize off, control characters and the other reserved characters are kept
-too, so only load images you trust. (A dedicated toggle to allow `/` while still
-stripping the rest is a possible future option.)
+`/` is the subfolder separator on Windows and Linux alike — use `/`, not `\`.
+The other reserved characters, control characters, and any `.`/`..`/leading-slash
+segment are still stripped, so the name can't escape `output/`. (Turning
+`sanitize_filename` fully off also keeps `/`, but it keeps control characters too,
+so `allow_path_separator` is the safer way to route to a subfolder.)
 
 ## Common patterns
 
