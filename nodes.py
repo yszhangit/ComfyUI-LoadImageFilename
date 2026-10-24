@@ -42,6 +42,21 @@ def _filter_emoji(name):
     return _EMOJI_RE.sub("", name)
 
 
+def _apply_regex(name, pattern, replacement):
+    # Empty pattern leaves the name untouched. A malformed pattern, or a
+    # replacement naming a group the pattern does not define, surfaces as a
+    # plain ValueError so the node reports a clear error, not a traceback.
+    if not pattern:
+        return name, []
+    try:
+        rx = re.compile(pattern)
+        result = rx.sub(replacement, name)
+        matches = [m.span() for m in rx.finditer(name)]
+    except re.error as ex:
+        raise ValueError("Invalid regex pattern/replacement {!r}: {}".format(pattern, ex)) from ex
+    return result, matches
+
+
 class LoadImageFilename(LoadImage):
     RETURN_TYPES = ("IMAGE", "MASK", "STRING")
     RETURN_NAMES = ("image", "mask", "filename")
@@ -52,7 +67,9 @@ class LoadImageFilename(LoadImage):
         "(newline, tab, carriage return), path separators and file-system "
         "reserved characters, and trims leading/trailing dots and spaces. "
         "'filter emoji' (off by default) additionally removes emoji and "
-        "emoji joiners."
+        "emoji joiners. 'pattern'/'replacement' run re.sub on the name first "
+        "(full rename is pattern '^.*$'); sanitize runs last, so a replacement "
+        "cannot inject a path separator."
     )
     SEARCH_ALIASES = ["load image filename", "image filename", "image name", "sanitize filename"]
 
@@ -62,11 +79,14 @@ class LoadImageFilename(LoadImage):
         optional = inputs.setdefault("optional", {})
         optional["sanitize_filename"] = ("BOOLEAN", {"default": True})
         optional["filter_emoji"] = ("BOOLEAN", {"default": False})
+        optional["pattern"] = ("STRING", {"default": "", "multiline": True})
+        optional["replacement"] = ("STRING", {"default": ""})
         return inputs
 
-    def load_image(self, image, sanitize_filename=True, filter_emoji=False):
+    def load_image(self, image, sanitize_filename=True, filter_emoji=False, pattern="", replacement=""):
         images, mask = super().load_image(image)
         filename = os.path.splitext(os.path.basename(folder_paths.get_annotated_filepath(image)))[0]
+        filename, _matches = _apply_regex(filename, pattern, replacement)
         if filter_emoji:
             filename = _filter_emoji(filename)
         if sanitize_filename:
@@ -74,5 +94,5 @@ class LoadImageFilename(LoadImage):
         return (images, mask, filename)
 
     @classmethod
-    def IS_CHANGED(s, image, sanitize_filename=True, filter_emoji=False):
-        return super().IS_CHANGED(image) + str(sanitize_filename) + str(filter_emoji)
+    def IS_CHANGED(s, image, sanitize_filename=True, filter_emoji=False, pattern="", replacement=""):
+        return super().IS_CHANGED(image) + str(sanitize_filename) + str(filter_emoji) + pattern + replacement
