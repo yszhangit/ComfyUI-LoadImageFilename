@@ -90,8 +90,8 @@ def _preview_text_block(source, pattern, matches, result):
 
 
 class LoadImageFilename(LoadImage):
-    RETURN_TYPES = ("IMAGE", "MASK", "STRING")
-    RETURN_NAMES = ("image", "mask", "filename")
+    RETURN_TYPES = ("IMAGE", "MASK", "STRING", "STRING")
+    RETURN_NAMES = ("image", "mask", "filename", "preview")
     CATEGORY = "image"
     DESCRIPTION = (
         "Loads an image and outputs the file name without its extension. "
@@ -124,7 +124,7 @@ class LoadImageFilename(LoadImage):
         if sanitize_filename:
             filename = _sanitize_filename(filename)
         preview = _preview_text_block(source, pattern, matches, filename)
-        return {"ui": {"text": (preview,)}, "result": (images, mask, filename)}
+        return {"ui": {"text": (preview,)}, "result": (images, mask, filename, preview)}
 
     @classmethod
     def IS_CHANGED(s, image, sanitize_filename=True, filter_emoji=False, pattern="", replacement=""):

@@ -26,6 +26,7 @@ No dependencies. Restart ComfyUI afterwards.
 | `image` | IMAGE | The loaded image tensor. |
 | `mask` | MASK | The image mask, same as the built-in node. |
 | `filename` | STRING | File name without extension. |
+| `preview` | STRING | Regex-match report (`SOURCE`/`PATTERN`/`MATCHED`/`RESULT`); wire to a Preview Text node. |
 
 ## Typical use case: feeding Save Image
 
@@ -85,6 +86,10 @@ preview (`ui.text`): `SOURCE`, `PATTERN`, `MATCHED`, and `RESULT`, with control
 characters shown as visible escapes (a newline appears as `\n`). It uses the text
 preview channel, so the node's own loaded-image preview is left untouched — no
 image card, no Pillow, no temp files, no frontend code.
+
+The same report is also the **`preview` STRING output** — wire it into a Preview
+Text node (e.g. KJNodes `PreviewText`) to read it on any frontend, including the
+classic litegraph UI. The node shows `ui.text` on the Vue / node2 frontend.
 
 ## Common patterns
 

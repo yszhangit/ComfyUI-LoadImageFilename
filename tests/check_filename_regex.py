@@ -76,7 +76,9 @@ try:
     assert "images" not in out["ui"], "preview must not use the image channel"
     text = out["ui"]["text"][0]
     assert "SOURCE:" in text and "PATTERN:" in text and "RESULT:" in text
-    assert "helloworld" in text                              # RESULT line = final filename
+    assert "helloworld" in text
+    assert len(out["result"]) == 4, out["result"]        # image, mask, filename, preview
+    assert out["result"][3] == text                       # 4th output is the report string                              # RESULT line = final filename
 finally:
     _rm(name)
 
@@ -95,6 +97,7 @@ try:
     out = Cls().load_image(bad)
     assert _name(out).startswith("bad"), _name(out)
     assert isinstance(out["ui"]["text"][0], str)
+    assert len(out["result"]) == 4
 finally:
     _rm(bad)
 
