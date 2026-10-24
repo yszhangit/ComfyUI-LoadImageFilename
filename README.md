@@ -91,6 +91,19 @@ The same report is also the **`match_report` STRING output** — wire it into a 
 Text node (e.g. KJNodes `PreviewText`) to read it on any frontend, including the
 classic litegraph UI. The node shows `ui.text` on the Vue / node2 frontend.
 
+### Routing to a subfolder
+
+`Save Image` reads a `/` in `filename_prefix` as a subfolder (resolved safely
+inside `output/`), so a directory is a common thing to add. Build `qwen_edit/photo`:
+
+- `pattern = ^`, `replacement = qwen_edit/`
+- **turn `sanitize_filename` OFF** — sanitize strips `/` (it counts as a path
+  separator), so the slash survives only with sanitize off.
+
+With sanitize off, control characters and the other reserved characters are kept
+too, so only load images you trust. (A dedicated toggle to allow `/` while still
+stripping the rest is a possible future option.)
+
 ## Common patterns
 
 Python `re` syntax. The result below is the regex step; the `sanitize_filename`
