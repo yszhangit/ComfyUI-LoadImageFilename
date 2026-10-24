@@ -26,7 +26,7 @@ No dependencies. Restart ComfyUI afterwards.
 | `image` | IMAGE | The loaded image tensor. |
 | `mask` | MASK | The image mask, same as the built-in node. |
 | `filename` | STRING | File name without extension. |
-| `preview` | STRING | Regex-match report (`SOURCE`/`PATTERN`/`MATCHED`/`RESULT`); wire to a Preview Text node. |
+| `match_report` | STRING | Regex-match report (`SOURCE`/`PATTERN`/`MATCHED`/`RESULT`); wire to a Preview Text node. |
 
 ## Typical use case: feeding Save Image
 
@@ -87,7 +87,7 @@ characters shown as visible escapes (a newline appears as `\n`). It uses the tex
 preview channel, so the node's own loaded-image preview is left untouched — no
 image card, no Pillow, no temp files, no frontend code.
 
-The same report is also the **`preview` STRING output** — wire it into a Preview
+The same report is also the **`match_report` STRING output** — wire it into a Preview
 Text node (e.g. KJNodes `PreviewText`) to read it on any frontend, including the
 classic litegraph UI. The node shows `ui.text` on the Vue / node2 frontend.
 
@@ -132,8 +132,9 @@ inject a `/`), and `filter_emoji` (if on) removes emoji.
 Note listing the toggle matrix. Drag it onto the canvas, pick an input whose name
 contains a newline, `:` or `/` (upload one), and confirm the saved file is named
 by the sanitized output. The node also carries `pattern` / `replacement` (the
-sample prefills `_+\d+_*` to strip a trailing counter), and its preview card
-shows the match and result every load. Toggle the booleans, or edit the pattern,
+sample prefills `_+\d+_*` to strip a trailing counter), and its text preview
+(`ui.text`, plus the `match_report` output) shows the match and result every
+load. Toggle the booleans, or edit the pattern,
 to watch the filename change.
 
 ![Sample workflow: the filename output feeding the Save Image filename_prefix](load-image-filename-workflow-sample.png)

@@ -78,9 +78,12 @@ try:
     assert "SOURCE:" in text and "PATTERN:" in text and "RESULT:" in text
     assert "helloworld" in text
     assert len(out["result"]) == 4, out["result"]        # image, mask, filename, preview
-    assert out["result"][3] == text                       # 4th output is the report string                              # RESULT line = final filename
+    assert out["result"][3] == text                       # 4th output is the report string
 finally:
     _rm(name)
+
+# Output names: the report socket is named `match_report` (filename is the result).
+assert Cls.RETURN_NAMES == ("image", "mask", "filename", "match_report"), Cls.RETURN_NAMES
 
 # IS_CHANGED: distinct cache key per (pattern, replacement); no delimiter collisions.
 slot = _make("slot.png")

@@ -91,7 +91,7 @@ def _preview_text_block(source, pattern, matches, result):
 
 class LoadImageFilename(LoadImage):
     RETURN_TYPES = ("IMAGE", "MASK", "STRING", "STRING")
-    RETURN_NAMES = ("image", "mask", "filename", "preview")
+    RETURN_NAMES = ("image", "mask", "filename", "match_report")
     CATEGORY = "image"
     DESCRIPTION = (
         "Loads an image and outputs the file name without its extension. "
