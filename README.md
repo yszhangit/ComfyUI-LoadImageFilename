@@ -6,8 +6,7 @@ It is ComfyUI's built-in `Load Image` node plus a third output: the loaded file'
 name without its extension (`photo.png` -> `photo`). The node subclasses
 `nodes.LoadImage`, so the dropdown, upload button, image decoding, video and
 animated image support, `IS_CHANGED` and `VALIDATE_INPUTS` all come from core.
-The regex preview card is drawn with Pillow (`PIL`); the node pulls in no other
-dependencies.
+There is no PIL, torch, or numpy code here.
 
 ## Installation
 
@@ -81,10 +80,11 @@ nothing leaves the name unchanged.
 
 ### Live preview
 
-Every time the node runs it draws a preview card in its preview panel: **SOURCE**
-with the matched region highlighted, the **PATTERN**, the **MATCHED** text, and
-the **RESULT** — so you watch each filename transform as you load images. No
-extra nodes, dependencies, or frontend code.
+Every time the node runs it reports the match in its preview panel as a **text**
+preview (`ui.text`): `SOURCE`, `PATTERN`, `MATCHED`, and `RESULT`, with control
+characters shown as visible escapes (a newline appears as `\n`). It uses the text
+preview channel, so the node's own loaded-image preview is left untouched — no
+image card, no Pillow, no temp files, no frontend code.
 
 ## Common patterns
 
