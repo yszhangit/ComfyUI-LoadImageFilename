@@ -64,11 +64,33 @@ try:
     assert out["result"][2] == "helloworld", out["result"][2]   # colon stripped, counter gone
     ref = out["ui"]["images"][0]
     assert ref["type"] == "temp"
-    assert os.path.exists(os.path.join(folder_paths.get_temp_directory(),
-                                       ref["filename"] + ".png"))
-    img = m._render_preview("slot_001", r"_+\d+$", [(5, 9)], "slot")
+    assert ref["filename"].endswith(".png"), ref["filename"]   # #1: ref must carry the extension /view needs
+    assert os.path.exists(os.path.join(folder_paths.get_temp_directory(), ref["filename"]))
+    img = m._render_preview("slot_001", r"_+\d+$", [(4, 8)], "slot")   # #6: corrected span
     assert img.width >= 320 and img.height >= 4 * 24            # 4 rows present
 finally:
     os.remove(os.path.join(folder_paths.get_input_directory(), name))
 
 print("Task2 OK")
+
+# Review fixes: ref extension (#1), IS_CHANGED delimiter (#2), safe preview text (#3/#4).
+petals = ["slot.png", "bad\udcff_name.png", "a\nb.png"]
+for _f in petals:
+    Image.fromarray((np.random.rand(4, 4, 3) * 255).astype("uint8")).save(os.path.join(_in, _f))
+try:
+    # #2 colliding widget pairs must yield distinct cache keys.
+    i = Cls.IS_CHANGED
+    assert i("slot.png", True, False, "ab", "c") != i("slot.png", True, False, "a", "bc")
+    assert i("slot.png", True, False, r"(\d)1", "x") != i("slot.png", True, False, r"(\d)", "1x")
+    # #3/#4 preview text escapes control/format chars and never raises on surrogates.
+    pt = m._preview_text
+    assert pt("a\nb") == "a\\nb" and pt("a\tb") == "a\\tb"
+    pt("\udcff")                                                   # lone surrogate: no raise
+    assert m._render_preview("a\nb", "\udcff", [(0, 1)], "a\nb").width >= 320
+    # #4 a lone-surrogate filename loads end-to-end; the preview must not crash the node.
+    assert Cls().load_image("bad\udcff_name.png")["result"][2].startswith("bad")
+finally:
+    for _f in petals:
+        os.remove(os.path.join(_in, _f))
+
+print("ReviewFixes OK")
