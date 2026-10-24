@@ -1,12 +1,10 @@
 # ComfyUI Load Image (Filename)
 
-Adds one node, `Load Image (Filename)` (category `image`), to ComfyUI.
+It is ComfyUI's built-in `Load Image` node plus loaded file's
+name without its extension (`photo.png` -> `photo`). Also supports filename manipulation with regex.
 
-It is ComfyUI's built-in `Load Image` node plus a third output: the loaded file's
-name without its extension (`photo.png` -> `photo`). The node subclasses
-`nodes.LoadImage`, so the dropdown, upload button, image decoding, video and
-animated image support, `IS_CHANGED` and `VALIDATE_INPUTS` all come from core.
-There is no PIL, torch, or numpy code here.
+
+![Sample workflow: the filename output feeding the Save Image filename_prefix](load-image-filename-workflow-sample.png)
 
 ## Installation
 
@@ -89,33 +87,7 @@ Sanitize runs last, so a replacement can't inject a `/` into the saved name. An
 invalid pattern (e.g. `(`) reports a clear node error; a pattern that matches
 nothing leaves the name unchanged.
 
-### Live preview
-
-Every time the node runs it reports the match in its preview panel as a **text**
-preview (`ui.text`): `SOURCE`, `PATTERN`, `MATCHED`, and `RESULT`, with control
-characters shown as visible escapes (a newline appears as `\n`). It uses the text
-preview channel, so the node's own loaded-image preview is left untouched — no
-image card, no Pillow, no temp files, no frontend code.
-
-The same report is also the **`match_report` STRING output** — wire it into a Preview
-Text node (e.g. KJNodes `PreviewText`) to read it on any frontend, including the
-classic litegraph UI. The node shows `ui.text` on the Vue / node2 frontend.
-
-### Routing to a subfolder
-
-`Save Image` reads a `/` in `filename_prefix` as a subfolder (resolved safely
-inside `output/`), so a directory is a common thing to add. Build `qwen_edit/photo`:
-
-- `pattern = ^`, `replacement = qwen_edit/`
-- `allow_path_separator` **ON** (with `sanitize_filename` on)
-
-`/` is the subfolder separator on Windows and Linux alike — use `/`, not `\`.
-The other reserved characters, control characters, and any `.`/`..`/leading-slash
-segment are still stripped, so the name can't escape `output/`. (Turning
-`sanitize_filename` fully off also keeps `/`, but it keeps control characters too,
-so `allow_path_separator` is the safer way to route to a subfolder.)
-
-## Common patterns
+### Common patterns
 
 Python `re` syntax. The result below is the regex step; the `sanitize_filename`
 toggle then strips control/path/reserved characters (so a replacement can't
@@ -149,23 +121,7 @@ inject a `/`), and `filter_emoji` (if on) removes emoji.
 - **Keep first N chars** — `^(.{N}).*$` with `replacement = \1`.
 - **Groups** — `replacement` supports `\1`, `\2`, … referencing capture groups.
 
-## Test workflow
 
-[`test-workflow.json`](test-workflow.json) is a ready graph: a
-`Load Image (Filename)` node wired into `Save Image`'s `filename_prefix`, plus a
-Note listing the toggle matrix. Drag it onto the canvas, pick an input whose name
-contains a newline, `:` or `/` (upload one), and confirm the saved file is named
-by the sanitized output. The node also carries `pattern` / `replacement` (the
-sample prefills `_+\d+_*` to strip a trailing counter), and its text preview
-(`ui.text`, plus the `match_report` output) shows the match and result every
-load. Toggle the booleans, or edit the pattern,
-to watch the filename change.
-
-![Sample workflow: the filename output feeding the Save Image filename_prefix](load-image-filename-workflow-sample.png)
-
-In the sample above the prefix `qwen_edit/qie_` is joined with the `filename`
-output of `slot_01_00002_.png`, so `Save Image` writes into
-`output/qwen_edit/qie_slot_01_00002_...png`.
 
 ## Inspired by
 
