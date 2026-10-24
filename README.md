@@ -107,10 +107,16 @@ inject a `/`), and `filter_emoji` (if on) removes emoji.
 | `img00042png` | `[^0-9]+` | *(empty)* | `00042` |
 | `verylongfilename123456` | `^(.{12}).*$` | `\1` | `verylongfile` |
 | *(any name)* | `^.*$` | `myname` | `myname` |
+| `photo` | `^` | `myapp_` | `myapp_photo` (prepend) |
+| `photo` | `$` | `-2024-05-01` | `photo-2024-05-01` (append) |
+| `photo` | `^.*$` | `pre-\g<0>-suf` | `pre-photo-suf` (wrap) |
 
 - **Strip a counter** — `_+\d+_*` (trailing), `^\d+_?` (leading). The `$`/`^`
   anchors keep it from eating a middle `_1_`.
 - **Rename fully** — `^.*$` + the new name in `replacement`.
+- **Prepend / append / wrap** — pattern `^` prepends to `replacement`; pattern
+  `$` appends. Wrap both with `^.*$` and `replacement = pre-\g<0>-suf`. The whole
+  match is `\g<0>` — **not** `\0` (which is a NUL byte).
 - **Keep first N chars** — `^(.{N}).*$` with `replacement = \1`.
 - **Groups** — `replacement` supports `\1`, `\2`, … referencing capture groups.
 
