@@ -1,8 +1,10 @@
 import os
 import re
 import unicodedata
+import uuid
 
 import folder_paths
+from PIL import Image, ImageDraw, ImageFont
 from nodes import LoadImage
 
 # Characters that must never reach a file name: path separators, the
@@ -57,6 +59,49 @@ def _apply_regex(name, pattern, replacement):
     return result, matches
 
 
+def _render_preview(source, pattern, matches, result):
+    # Preview card: SOURCE (matched spans highlighted), PATTERN, MATCHED, RESULT.
+    font = ImageFont.load_default()
+    width, pad, lh = 640, 8, 24
+    label_x = pad + font.getlength("MATCHED ")
+    matched = " ".join(source[s:e] for s, e in matches if s < e) or "(no match)"
+    rows = [("SOURCE", source), ("PATTERN", pattern or "(none)"), ("MATCHED", matched), ("RESULT", result)]
+
+    def wrap(text):
+        lines, line = [], ""
+        for ch in text:
+            if line and font.getlength(line + ch) > width - pad - label_x:
+                lines.append(line)
+                line = ch
+            else:
+                line += ch
+        lines.append(line)
+        return lines
+
+    blocks = [(label, wrap(val)) for label, val in rows]
+    img = Image.new("RGB", (width, pad * 2 + lh * sum(len(lines) for _, lines in blocks)), (255, 255, 255))
+    d = ImageDraw.Draw(img)
+    y = pad
+    for (label, lines), (src_label, src_val) in zip(blocks, rows):
+        d.text((pad, y), label, fill=(110, 110, 110), font=font)
+        if label == "SOURCE" and len(lines) == 1:
+            for s, e in matches:
+                if s < e:
+                    d.rectangle([label_x + font.getlength(src_val[:s]), y,
+                                  label_x + font.getlength(src_val[:e]), y + lh - 6],
+                                fill=(255, 244, 166))
+        for i, line in enumerate(lines):
+            d.text((label_x, y + i * lh), line, fill=(0, 0, 0), font=font)
+        y += lh * len(lines)
+    return img
+
+
+def _save_temp_preview(img):
+    name = "lif_" + uuid.uuid4().hex
+    img.save(os.path.join(folder_paths.get_temp_directory(), name + ".png"))
+    return {"filename": name, "subfolder": "", "type": "temp"}
+
+
 class LoadImageFilename(LoadImage):
     RETURN_TYPES = ("IMAGE", "MASK", "STRING")
     RETURN_NAMES = ("image", "mask", "filename")
@@ -85,13 +130,14 @@ class LoadImageFilename(LoadImage):
 
     def load_image(self, image, sanitize_filename=True, filter_emoji=False, pattern="", replacement=""):
         images, mask = super().load_image(image)
-        filename = os.path.splitext(os.path.basename(folder_paths.get_annotated_filepath(image)))[0]
-        filename, _matches = _apply_regex(filename, pattern, replacement)
+        source = os.path.splitext(os.path.basename(folder_paths.get_annotated_filepath(image)))[0]
+        filename, matches = _apply_regex(source, pattern, replacement)
         if filter_emoji:
             filename = _filter_emoji(filename)
         if sanitize_filename:
             filename = _sanitize_filename(filename)
-        return (images, mask, filename)
+        ref = _save_temp_preview(_render_preview(source, pattern, matches, filename))
+        return {"ui": {"images": [ref]}, "result": (images, mask, filename)}
 
     @classmethod
     def IS_CHANGED(s, image, sanitize_filename=True, filter_emoji=False, pattern="", replacement=""):

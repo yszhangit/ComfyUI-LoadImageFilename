@@ -31,13 +31,19 @@ import folder_paths
 import numpy as np
 from PIL import Image
 Cls = m.LoadImageFilename
+
+
+def _name(out):
+    # load_image returns a tuple in Task 1 and the {"ui", "result"} dict in Task 2.
+    return (out["result"] if isinstance(out, dict) else out)[2]
+
 _in = folder_paths.get_input_directory()
 _names = ["slot_001.png", "shot_1_final.png"]
 for _n in _names:
     Image.fromarray((np.random.rand(4, 4, 3) * 255).astype("uint8")).save(os.path.join(_in, _n))
 try:
-    assert Cls().load_image("slot_001.png", pattern=r"_+\d+$", replacement="")[2] == "slot"
-    assert Cls().load_image("shot_1_final.png", pattern=r"_+\d+$", replacement="")[2] == "shot_1_final"
+    assert _name(Cls().load_image("slot_001.png", pattern=r"_+\d+$", replacement="")) == "slot"
+    assert _name(Cls().load_image("shot_1_final.png", pattern=r"_+\d+$", replacement="")) == "shot_1_final"
     try:
         Cls().load_image("slot_001.png", pattern="(", replacement="")
         assert False, "expected ValueError"
@@ -47,3 +53,22 @@ finally:
         os.remove(os.path.join(_in, _n))
 
 print("Task1 OK")
+
+# Task 2: load_image emits a preview card and a (images, mask, filename) result.
+name = "hello:world_00123.png"
+Image.fromarray((np.random.rand(6, 6, 3) * 255).astype("uint8")).save(
+    os.path.join(folder_paths.get_input_directory(), name))
+try:
+    out = Cls().load_image(name, sanitize_filename=True, filter_emoji=True,
+                           pattern=r"_+\d+_*", replacement="")
+    assert out["result"][2] == "helloworld", out["result"][2]   # colon stripped, counter gone
+    ref = out["ui"]["images"][0]
+    assert ref["type"] == "temp"
+    assert os.path.exists(os.path.join(folder_paths.get_temp_directory(),
+                                       ref["filename"] + ".png"))
+    img = m._render_preview("slot_001", r"_+\d+$", [(5, 9)], "slot")
+    assert img.width >= 320 and img.height >= 4 * 24            # 4 rows present
+finally:
+    os.remove(os.path.join(folder_paths.get_input_directory(), name))
+
+print("Task2 OK")

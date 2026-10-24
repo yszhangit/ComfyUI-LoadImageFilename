@@ -19,7 +19,7 @@
         { "name": "filename", "type": "STRING", "links": [1], "slot_index": 2 }
       ],
       "properties": { "Node name for S&R": "LoadImageFilename" },
-      "widgets_values": ["example.png", "image", true, true]
+      "widgets_values": ["example.png", "image", true, true, "_+\\d+_*", ""]
     },
     {
       "id": 2,
@@ -49,7 +49,7 @@
       "outputs": [],
       "properties": { "text": "" },
       "widgets_values": [
-        "TEST: Load Image (Filename) -> Save Image.\n\nThe filename output feeds Save Image's filename_prefix, so the saved file's name IS the node's sanitized output. Pick an input whose name contains a newline, ':' or '/' (upload one, e.g. a file named 'weird:emoji\ud83d\udd25.png').\n\nToggle matrix to validate:\n- sanitize ON,  emoji ON  -> control chars, : / \\ \" <> | * and emoji all removed; leading/trailing . and spaces trimmed.\n- sanitize ON,  emoji OFF -> control/path/reserved chars removed, emoji kept.\n- sanitize OFF, emoji OFF -> raw file name, untouched.\n\nEach toggle is part of IS_CHANGED, so flipping a toggle re-runs the node (output filename updates without changing the seed)."
+        "TEST: Load Image (Filename) -> Save Image.\n\nThe filename output feeds Save Image's filename_prefix, so the saved file's name IS the node's output. Upload an input whose name has a newline, ':' or '/' and a trailing counter, e.g. 'weird:slot_001.png'.\n\nRegex (prefilled pattern '_+\\d+_*', empty replacement): strips a trailing counter, slot_001 -> slot. Full rename: pattern '^.*$' + new name. Groups: pattern '(\\d+)' -> replacement '[\\1]'. Sanitize runs last, so a replacement cannot inject '/'.\n\nPreview card (on the node, every load): SOURCE with the match highlighted, PATTERN, MATCHED, RESULT.\n\nToggle matrix: sanitize ON/emoji ON -> control + : / \\ \" <> | * + emoji removed, leading/trailing . and spaces trimmed. sanitize ON/emoji OFF -> control/path/reserved removed, emoji kept. sanitize OFF/emoji OFF -> raw name. Each toggle is in IS_CHANGED, so flipping re-runs the node."
       ],
       "color": "#432",
       "bgcolor": "#653"

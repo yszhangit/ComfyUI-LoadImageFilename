@@ -62,13 +62,39 @@ keycap, and common symbol singles (`© ® ™ ✅ ❌ ⭐` …). Independent of 
 enable it on top of sanitize to drop emoji too, or alone to strip emoji while
 leaving control and reserved characters untouched.
 
+## Regex manipulation
+
+`pattern` + `replacement` run `re.sub(pattern, replacement, filename)` on the
+name, **before** the emoji and sanitize steps. Leave `pattern` empty for the
+plain behavior.
+
+- **Strip a counter** — `pattern = _+\d+_*` with an empty replacement turns
+  `ComfyUI_00001_` into `ComfyUI` and `slot_001` into `slot`.
+- **Rename fully** — `pattern = ^.*$`, replacement = the new name.
+- **Groups** — `replacement` supports captures: `pattern = (\d+)` and
+  `replacement = [\1]` brackets the digits.
+
+Sanitize runs last, so a replacement can't inject a `/` into the saved name. An
+invalid pattern (e.g. `(`) reports a clear node error; a pattern that matches
+nothing leaves the name unchanged.
+
+### Live preview
+
+Every time the node runs it draws a preview card in its preview panel: **SOURCE**
+with the matched region highlighted, the **PATTERN**, the **MATCHED** text, and
+the **RESULT** — so you watch each filename transform as you load images. No
+extra nodes, dependencies, or frontend code.
+
 ## Test workflow
 
 [`test-workflow.json`](test-workflow.json) is a ready graph: a
 `Load Image (Filename)` node wired into `Save Image`'s `filename_prefix`, plus a
 Note listing the toggle matrix. Drag it onto the canvas, pick an input whose name
 contains a newline, `:` or `/` (upload one), and confirm the saved file is named
-by the sanitized output. Toggle the two booleans to watch the filename change.
+by the sanitized output. The node also carries `pattern` / `replacement` (the
+sample prefills `_+\d+_*` to strip a trailing counter), and its preview card
+shows the match and result every load. Toggle the booleans, or edit the pattern,
+to watch the filename change.
 
 ![Sample workflow: the filename output feeding the Save Image filename_prefix](load-image-filename-workflow-sample.png)
 
