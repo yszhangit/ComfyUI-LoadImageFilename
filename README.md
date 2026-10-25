@@ -103,6 +103,8 @@ Example: `pattern = ^`, `replacement = qwen_edit/%date:%Y-%m-%d%/`, with
 use `%date:%Y-%m-%d-%H%M%S%`. `Save Image` still appends its `_00001_` counter, so
 you don't need a timestamp for unique names — date is enough.
 
+![append date as directory](add-date-as-dir.png)
+
 ## Common patterns
 
 Python `re` syntax. The result below is the regex step; the `sanitize_filename`
