@@ -1,5 +1,6 @@
 import os
 import re
+import time
 import unicodedata
 
 import folder_paths
@@ -95,6 +96,23 @@ def _preview_text_block(source, pattern, matches, result):
     )
 
 
+_DATE_TOKENS = {"%year%": "%Y", "%month%": "%m", "%day%": "%d"}
+
+
+def _expand_date(name):
+    # The frontend expands %date:%...% / %year%.. in widget strings only; a wired
+    # filename bypasses it, so expand the date tokens here. Runs before sanitize so
+    # a token's ':' is consumed before stripping. Date only (no time tokens).
+    if "%" not in name:
+        return name
+    now = time.localtime()
+    name = re.sub(r"%date:(.+)%", lambda m: time.strftime(m.group(1), now), name)
+    for token, fmt in _DATE_TOKENS.items():
+        if token in name:
+            name = name.replace(token, time.strftime(fmt, now))
+    return name
+
+
 class LoadImageFilename(LoadImage):
     RETURN_TYPES = ("IMAGE", "MASK", "STRING", "STRING")
     RETURN_NAMES = ("image", "mask", "filename", "match_report")
@@ -128,6 +146,7 @@ class LoadImageFilename(LoadImage):
         images, mask = super().load_image(image)
         source = os.path.splitext(os.path.basename(folder_paths.get_annotated_filepath(image)))[0]
         filename, matches = _apply_regex(source, pattern, replacement)
+        filename = _expand_date(filename)
         if filter_emoji:
             filename = _filter_emoji(filename)
         if sanitize_filename:

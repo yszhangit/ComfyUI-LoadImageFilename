@@ -87,7 +87,23 @@ Sanitize runs last, so a replacement can't inject a `/` into the saved name. An
 invalid pattern (e.g. `(`) reports a clear node error; a pattern that matches
 nothing leaves the name unchanged.
 
-### Common patterns
+#### Date in the filename
+
+The node expands date tokens in its `filename` output **before** sanitize, so a
+wired prefix carries a real date. (`%date:…%` is a frontend-widget feature and
+the server only expands `%year% %month% %day%` in widget strings — a linked
+filename bypasses both, so the node does it itself.)
+
+- `%date:%Y-%m-%d%` (strftime) → `2026-10-24`
+- `%year% %month% %day%` → `2026`, `10`, `24`
+
+Example: `pattern = ^`, `replacement = qwen_edit/%date:%Y-%m-%d%/`, with
+`allow_path_separator` on → `qwen_edit/2026-10-24/photo`. Time tokens
+(`%hour% %minute% %second%`) are intentionally **not** expanded — for a timestamp
+use `%date:%Y-%m-%d-%H%M%S%`. `Save Image` still appends its `_00001_` counter, so
+you don't need a timestamp for unique names — date is enough.
+
+## Common patterns
 
 Python `re` syntax. The result below is the regex step; the `sanitize_filename`
 toggle then strips control/path/reserved characters (so a replacement can't

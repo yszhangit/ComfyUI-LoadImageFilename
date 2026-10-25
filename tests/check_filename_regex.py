@@ -125,4 +125,26 @@ try:
 finally:
     _rm("photo.png")
 
+# _expand_date: %date:<strftime>% and the %year%..%second% set, matching widget+server.
+import re as _re
+ed = m._expand_date
+assert ed("no tokens here") == "no tokens here"
+assert ed("") == ""
+assert _re.fullmatch(r"\d{4}", ed("%year%"))
+assert ed("%hour%") == "%hour%" and ed("%second%") == "%second%"  # date-only: time tokens untouched
+assert _re.fullmatch(r"\d{4}-\d{2}-\d{2}", ed("%date:%Y-%m-%d%"))
+exp = ed("pre-%year%-%month%-%day%-post")
+assert exp.startswith("pre-") and exp.endswith("-post") and "%year%" not in exp
+
+# End-to-end: a date token in replacement expands in the node (the server can't),
+# and survives sanitize. Auto-sequencing stays Save Image's job (the _%05d_ counter).
+ph = _make("photo.png")
+try:
+    out = Cls().load_image("photo.png", sanitize_filename=True, allow_path_separator=True,
+                           pattern=r"^", replacement="qwen_edit/%date:%Y-%m-%d%/")
+    assert _re.fullmatch(r"qwen_edit/\d{4}-\d{2}-\d{2}/photo", _name(out)), _name(out)
+    assert "%" not in _name(out)
+finally:
+    _rm("photo.png")
+
 print("ALL OK")
